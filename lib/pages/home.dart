@@ -1,3 +1,6 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:cp/pages/hasil_rekomendasi.dart';
 import 'package:cp/widgets/teks.dart';
 import 'package:flutter/material.dart';
@@ -5,8 +8,71 @@ import 'dart:io';
 import './hasil_rekomendasi.dart';
 import './chatbot.dart';
 
-class Home extends StatelessWidget {
-  const Home({super.key});
+class Home extends StatefulWidget {
+  @override
+  _HomeState createState() => _HomeState();
+}
+
+class _HomeState extends State<Home> {
+
+  XFile? image;
+
+  final ImagePicker picker = ImagePicker();
+
+  //we can upload image from camera or from gallery based on parameter
+  Future getImage(ImageSource media) async {
+    var img = await picker.pickImage(source: media);
+
+    setState(() {
+      image = img;
+    });
+  }
+
+  //show popup dialog
+  void myAlert() {
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            title: Text('Please choose media to select'),
+            content: Container(
+              height: MediaQuery.of(context).size.height / 6,
+              child: Column(
+                children: [
+                  ElevatedButton(
+                    //if user click this button, user can upload image from gallery
+                    onPressed: () {
+                      Navigator.pop(context);
+                      getImage(ImageSource.gallery);
+                    },
+                    child: Row(
+                      children: [
+                        Icon(Icons.image),
+                        Text('From Gallery'),
+                      ],
+                    ),
+                  ),
+                  ElevatedButton(
+                    //if user click this button. user can upload image from camera
+                    onPressed: () {
+                      Navigator.pop(context);
+                      getImage(ImageSource.camera);
+                    },
+                    child: Row(
+                      children: [
+                        Icon(Icons.camera),
+                        Text('From Camera'),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +86,9 @@ class Home extends StatelessWidget {
         child: Container(
           padding: EdgeInsets.only(top: 10),
           color: Colors.green[300],
-          child: Column(
+          child: ListView(
+            children: [
+              Column(
             children: [
               SizedBox(
                 height: 18.0,
@@ -33,23 +101,33 @@ class Home extends StatelessWidget {
                 height: 18.0,
               ),
               // Buat gambar
-              Container(
-                  width: 150,
-                  height: 150,
-                  // margin: EdgeInsets.only(top: 15, bottom: 15),
-                  child: Image(
-                    image: NetworkImage(
-                        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQORdyAPOhfa4FeNYJfpW0ixTvBCabf-wNznA&usqp=CAU"),
-                    fit: BoxFit.cover,
-                  )),
+              image != null
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.file(
+                        //to show image, you type like this.
+                        File(image!.path),
+                        fit: BoxFit.cover,
+                        width: 150,
+                        // width: MediaQuery.of(context).size.width,
+                        height: 150,
+                      ),
+                    ),
+                  )
+                : Text(
+                    "No Image",
+                    style: TextStyle(fontSize: 20),
+                  ),
               SizedBox(
                 height: 18.0,
               ),
               Container(
                 width: 200,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [Teks('Upload'), Teks('Kamera')],
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [Teks('Upload')],
                 ),
               ),
               Container(
@@ -61,24 +139,10 @@ class Home extends StatelessWidget {
                   children: [
                     ElevatedButton(
                       onPressed: () => {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (context) => HasilRekomendasi()))
+                        myAlert()
                       },
                       child: Icon(
                         Icons.upload_file_outlined,
-                        size: 20.0,
-                        color: Colors.white,
-                      ),
-                      style: ButtonStyle(
-                          textStyle: MaterialStateProperty.all(TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.w600)),
-                          backgroundColor:
-                              MaterialStateProperty.all(Colors.blue[400])),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => {exit(0)},
-                      child: Icon(
-                        Icons.camera_alt_outlined,
                         size: 20.0,
                         color: Colors.white,
                       ),
@@ -160,6 +224,8 @@ class Home extends StatelessWidget {
               )
             ],
           ),
+            ],
+          )
         ),
       ),
     );
